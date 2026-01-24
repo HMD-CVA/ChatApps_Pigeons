@@ -2,7 +2,7 @@
   "name": "pigeons",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon server.js"
@@ -21,7 +21,13 @@
   "homepage": "https://github.com/HMD-CVA/ChatApps_Pigeons#readme",
   "dependencies": {
     "dotenv": "^17.2.3",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "express-handlebars": "^8.0.4",
+    "mongoose": "^9.1.5",
+    "mssql": "^12.2.0",
+    "sequelize": "^6.37.7",
+    "sequelize-cli": "^6.6.5",
+    "tedious": "^19.2.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.11"
