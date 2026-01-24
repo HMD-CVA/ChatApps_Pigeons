@@ -13,11 +13,11 @@ const { connectToDB } = require('./src/configs/dbConfig');
 connectToDB();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8888;
 
 // CORS - Cho phép Angular gọi API
 app.use(cors({
-  origin: 'http://localhost:4200',
+  origin: process.env.LINK_CLIENT,
   credentials: true
 }));
 
