@@ -16,10 +16,10 @@ const app = express();
 const PORT = process.env.PORT || 8888;
 
 // CORS - Cho phép Angular gọi API
-app.use(cors({
-  origin: process.env.LINK_CLIENT,
-  credentials: true
-}));
+// app.use(cors({
+//   origin: process.env.LINK_CLIENT,
+//   credentials: true
+// }));
 
 // Middleware parse JSON và URL-encoded data
 app.use(express.json());                    // Parse JSON body
