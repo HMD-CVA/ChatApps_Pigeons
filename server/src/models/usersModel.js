@@ -1,63 +1,160 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../configs/sequelizeConfig');
 
-// Định nghĩa schema
-const userSchema = new mongoose.Schema({
-    // Tên field: { các thuộc tính }
-    username: {
-        type: String,        // Kiểu dữ liệu
-        required: true,      // Bắt buộc phải có
-        unique: true,        // Giá trị duy nhất
-        trim: true          // Loại bỏ khoảng trắng
+// Định nghĩa model User với Sequelize
+const User = sequelize.define('User', {
+    // Primary Key
+    id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+        field: 'id'
     },
+    
+    // Email
     email: {
-        type: String,
-        required: [true, 'Email là bắt buộc'],  // Custom error message
+        type: DataTypes.STRING(100),
+        allowNull: false,
         unique: true,
-        lowercase: true,     // Tự động chuyển thành chữ thường
-        match: [/^\S+@\S+\.\S+$/, 'Email không hợp lệ']  // Validation regex
+        field: 'email',
+        validate: {
+            isEmail: true
+        }
     },
-    password: {
-        type: String,
-        required: true,
-        minlength: 6
+    
+    // Password Hash
+    password_hash: {
+        type: DataTypes.STRING(250),
+        allowNull: false,
+        field: 'password_hash'
     },
-    age: {
-        type: Number,
-        min: 0,
-        max: 120,
-        default: 18          // Giá trị mặc định
+    
+    // Full Name
+    full_name: {
+        type: DataTypes.STRING(250),
+        allowNull: true,
+        field: 'full_name'
     },
+    
+    // Bio
+    bio: {
+        type: DataTypes.STRING(500),
+        allowNull: true,
+        field: 'bio'
+    },
+    
+    // Avatar URL
+    avatar_url: {
+        type: DataTypes.STRING(500),
+        allowNull: true,
+        field: 'avatar_url'
+    },
+    
+    // Phone Number
+    phone_number: {
+        type: DataTypes.STRING(20),
+        allowNull: true,
+        unique: true,
+        field: 'phone_number'
+    },
+    
+    // Status
+    status: {
+        type: DataTypes.STRING(20),
+        defaultValue: 'offline',
+        field: 'status',
+        validate: {
+            isIn: [['online', 'offline', 'away', 'busy']]
+        }
+    },
+    
+    // Role
     role: {
-        type: String,
-        enum: ['user', 'admin', 'moderator'],  // Chỉ chấp nhận các giá trị này
-        default: 'user'
-    },
-    isActive: {
-        type: Boolean,
-        default: true
-    },
-    avatar: String,          // Cách viết ngắn gọn
-    
-    // Array
-    hobbies: [String],
-    
-    // Object lồng nhau
-    address: {
-        street: String,
-        city: String,
-        zipCode: String
+        type: DataTypes.STRING(20),
+        defaultValue: 'user',
+        field: 'role',
+        validate: {
+            isIn: [['user', 'admin']]
+        }
     },
     
-    // Reference đến collection khác
-    posts: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Post'
-    }]
+    // Is Active
+    is_active: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+        field: 'is_active'
+    },
+    
+    // Is Email Verified
+    is_email_verified: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        field: 'is_email_verified'
+    },
+    
+    // Is Phone Verified
+    is_phone_verified: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        field: 'is_phone_verified'
+    },
+    
+    // Last Online At
+    last_online_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        field: 'last_online_at'
+    },
+    
+    // Created At
+    created_at: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+        allowNull: false,
+        field: 'created_at'
+    },
+    
+    // Updated At
+    updated_at: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+        allowNull: true,
+        field: 'updated_at'
+    }
 }, {
-    timestamps: true  // Tự động thêm createdAt và updatedAt
+    // Cấu hình bảng
+    tableName: 'Users',
+    timestamps: false,
+    freezeTableName: true,
+    indexes: [
+        { fields: ['email'] },
+        { fields: ['phone_number'] },
+        { fields: ['status'] }
+    ]
 });
 
-// Tạo model từ schema
-const User = mongoose.model('User', userSchema);
+// Instance methods
+User.prototype.toJSON = function() {
+    const values = { ...this.get() };
+    delete values.password_hash;  // Không trả về password
+    return values;
+};
+
+// Class methods
+User.findByEmail = async function(email) {
+    return await this.findOne({ where: { email: email } });
+};
+
+User.findByPhone = async function(phoneNumber) {
+    return await this.findOne({ where: { phone_number: phoneNumber } });
+};
+
+User.findActiveUsers = async function() {
+    return await this.findAll({ where: { is_active: true } });
+};
+
+User.findOnlineUsers = async function() {
+    return await this.findAll({ where: { status: 'online' } });
+};
 
 module.exports = User;

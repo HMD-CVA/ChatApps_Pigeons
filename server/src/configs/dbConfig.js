@@ -20,7 +20,6 @@ async function connectToDB() {
     // Kết nối SQL Server
     try {
         await sql.connect(dbConfig);
-        console.log('Connected to SQL Server successfully.');
         sqlConnected = true;
     } catch (err) {
         console.error('SQL Server connection error:', err.message);
@@ -29,7 +28,6 @@ async function connectToDB() {
     // Kết nối MongoDB
     try {
         await mongoose.connect(process.env.MongoDB_URL);
-        console.log('Connected to MongoDB successfully.');
         mongoConnected = true;
     } catch (err) {
         console.error('MongoDB connection error:', err.message);
