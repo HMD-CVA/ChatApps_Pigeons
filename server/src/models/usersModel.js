@@ -123,7 +123,8 @@ const User = sequelize.define('User', {
     }
 }, {
     // Cấu hình bảng
-    tableName: 'Users',
+    tableName: 'users',
+    schema: 'ChatPigeons',
     timestamps: false,
     freezeTableName: true,
     indexes: [
@@ -156,5 +157,6 @@ User.findActiveUsers = async function() {
 User.findOnlineUsers = async function() {
     return await this.findAll({ where: { status: 'online' } });
 };
+
 
 module.exports = User;

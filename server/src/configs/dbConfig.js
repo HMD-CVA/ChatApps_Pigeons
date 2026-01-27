@@ -1,28 +1,26 @@
-const sql = require('mssql');
+const { Pool } = require('pg');
 const mongoose = require('mongoose');
 require('dotenv').config();
 
-const dbConfig = {
-    user: process.env.UsernameDB,
-    password: process.env.PasswordDB,
-    server: process.env.SERVER_NAME, // Thay đổi nếu cần
-    database: process.env.DATABASE,
-    options: {
-        encrypt: true,
-        enableArithAbort: true
+
+// PostgreSQL pool
+const pgPool = new Pool({
+    connectionString: process.env.POSTGRES_URL,
+    ssl: {
+        rejectUnauthorized: false
     }
-};
+});
 
 async function connectToDB() {
-    let sqlConnected = false;
+    let pgConnected = false;
     let mongoConnected = false;
 
-    // Kết nối SQL Server
+    // Kết nối PostgreSQL
     try {
-        await sql.connect(dbConfig);
-        sqlConnected = true;
+        await pgPool.query('SELECT 1');
+        pgConnected = true;
     } catch (err) {
-        console.error('SQL Server connection error:', err.message);
+        console.error('PostgreSQL connection error:', err.message);
     }
 
     // Kết nối MongoDB
@@ -34,8 +32,8 @@ async function connectToDB() {
     }
 
     // Kiểm tra kết quả
-    if (!sqlConnected) {
-        throw new Error('Failed to connect to SQL Server.');
+    if (!pgConnected) {
+        throw new Error('Failed to connect to PostgreSQL.');
     }
     if (!mongoConnected) {
         throw new Error('Failed to connect to MongoDB.');
@@ -46,6 +44,6 @@ async function connectToDB() {
 
 
 module.exports = {
-    sql,
+    pgPool,
     connectToDB
 };

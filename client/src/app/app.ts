@@ -2,10 +2,13 @@ import { Component, signal, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { User } from './services/user';
+// Đường dẫn import đúng chuẩn Angular, ví dụ nếu file nằm ở src/app/webComponent/conversationLayout/conversation.component.ts:
+import { ConversationLayoutComponent } from './webComponent/conversationLayout/conversationLayout.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, CommonModule],
+  standalone: true,
+  imports: [RouterOutlet, CommonModule, ConversationLayoutComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
@@ -25,7 +28,7 @@ export class App implements OnInit {
     this.loading = true;
     this.userService.getAllUsers().subscribe({
       next: (response) => {
-        console.log('Response:', response);
+        // console.log('Response:', response);
         this.users = response.metadata || [];  // Sửa từ data thành metadata
         this.loading = false;
       },

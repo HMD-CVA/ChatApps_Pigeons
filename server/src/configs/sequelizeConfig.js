@@ -8,20 +8,22 @@ const sequelize = new Sequelize(
     process.env.PasswordDB,    // Password
     {
         host: process.env.SERVER_NAME,
-        dialect: 'mssql',
-        dialectOptions: {
-            options: {
-                encrypt: true,
-                enableArithAbort: true,
-                trustServerCertificate: false
-            }
-        },
-        logging: false,  // Tắt log SQL queries, set true để debug
+        dialect: 'postgres',
+        logging: false,  // Bật log SQL queries để debug
         pool: {
             max: 5,
             min: 0,
             acquire: 30000,
             idle: 10000
+        },
+        dialectOptions: {
+            ssl: {
+                require: true,
+                rejectUnauthorized: false
+            }
+        },
+        define: {
+            schema: 'ChatPigeons'  // Mặc định tất cả model sẽ dùng schema này
         }
     }
 );
@@ -30,10 +32,11 @@ const sequelize = new Sequelize(
 async function testConnection() {
     try {
         await sequelize.authenticate();
-        console.log('✓ Sequelize connected to SQL Server successfully.');
+        console.log('Sequelize connected to SQL Server successfully.');
     } catch (error) {
-        console.error('✗ Sequelize connection error:', error.message);
+        console.error('Sequelize connection error:', error.message);
     }
 }
+
 
 module.exports = { sequelize, testConnection };
