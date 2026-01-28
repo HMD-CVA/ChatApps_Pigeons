@@ -4,7 +4,8 @@ class UsersService {
     // Lấy tất cả users
     async getAllUsers() {
         return await usersModel.findAll({
-            where: { is_active: true }
+            where: { is_active: true },
+            order: [['full_name', 'ASC']]
         });
     }
 

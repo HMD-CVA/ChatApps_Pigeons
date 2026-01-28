@@ -1,4 +1,4 @@
-const homeService = require('../services/homeService');
+const homeService = require('../services/homeConversationService');
 const SuccessResponse = require('../core/successResponse');
 
 class HomeController {

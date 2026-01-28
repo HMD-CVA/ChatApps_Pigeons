@@ -6,13 +6,13 @@ import { environment } from '../../environments/environment';
 @Injectable({
   providedIn: 'root',
 })
-export class Home {
+export class Conversation {
     private apiUrl = `${environment.apiUrl}`;
     constructor(private http: HttpClient) { }
 
     // Lấy tất cả conversations của users này
     getConversations(userId: string): Observable<any> {
-        return this.http.get(`${this.apiUrl}/:${userId}`);
+        return this.http.get(`${this.apiUrl}/conversations/${userId}`);
     }
 
 }
