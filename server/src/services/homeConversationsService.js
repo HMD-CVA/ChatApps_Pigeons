@@ -211,7 +211,8 @@ class HomeConversationService {
                 lastMessage: sidebarLastMessage,
                 unread_count: hasLeft ? 0 : unreadCountsMap[conv.id] || 0,
                 is_pinned: isPinnedMap.get(conv.id) || false,
-                allow_history_view: conv.allow_history_view
+                allow_history_view: conv.allow_history_view,
+                allow_member_chat: conv.allow_member_chat
             };
         });
 

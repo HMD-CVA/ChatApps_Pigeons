@@ -55,11 +55,11 @@ const Conversation = sequelize.define('Conversation', {
             isIn: [['no_key', 'active', 'require_rotation']]
         }
     },
-    // allow_history_view: {
-    //     type: DataTypes.BOOLEAN,
-    //     defaultValue: true,
-    //     field: 'allow_history_view'
-    // },
+    allow_member_chat: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+        field: 'allow_member_chat'
+    },
     created_at: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,

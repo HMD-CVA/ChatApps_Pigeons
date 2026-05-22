@@ -298,6 +298,32 @@
                 </div>
             </div>
 
+            <!-- Cài đặt nhóm (Chỉ Trưởng nhóm) -->
+            @if (isGroupConversation && isOwner) {
+            <div class="accordion-item">
+                <button class="accordion-header" (click)="toggleSection('groupSettings')">
+                    <span>Cài đặt nhóm</span>
+                    <i class="bi" [class.bi-chevron-up]="sections().groupSettings"
+                        [class.bi-chevron-down]="!sections().groupSettings"></i>
+                </button>
+                <div class="accordion-content" [class.open]="sections().groupSettings">
+                    <div class="content-padding">
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <span class="setting-label">Cho phép thành viên nhắn tin</span>
+                                <p class="setting-desc">Nếu tắt, chỉ Admin và Owner mới có thể gửi tin nhắn.</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" [checked]="conversationInfor?.allow_member_chat"
+                                    (change)="toggleAllowMemberChat($event)">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            }
+
             <!-- Quyền riêng tư & Hỗ trợ -->
             @if (isGroupConversation) {
             <div class="accordion-item">

@@ -362,6 +362,9 @@ export class ActiveConversationService implements OnDestroy {
                     if (data.avatar_url !== undefined) {
                         conv.avatar_url = data.avatar_url;
                     }
+                    if (data.allow_member_chat !== undefined) {
+                        conv.allow_member_chat = data.allow_member_chat;
+                    }
                     convList[index] = conv;
                     return {
                         ...cur,

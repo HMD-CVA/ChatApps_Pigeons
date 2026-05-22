@@ -125,6 +125,11 @@ export class ConversationInfoLayoutComponent implements OnInit, OnDestroy, OnCha
                     }
                     this.conversationAvatar = data.avatar_url;
                 }
+                if (data.allow_member_chat !== undefined) {
+                    if (this.conversationInfor) {
+                        this.conversationInfor.allow_member_chat = data.allow_member_chat;
+                    }
+                }
                 
                 this.cdr.detectChanges();
 
@@ -385,7 +390,8 @@ export class ConversationInfoLayoutComponent implements OnInit, OnDestroy, OnCha
         video: false,
         file: false,
         link: false,
-        privacy: false
+        privacy: false,
+        groupSettings: false
     });
 
     mediaShowAll = signal({
@@ -681,6 +687,69 @@ export class ConversationInfoLayoutComponent implements OnInit, OnDestroy, OnCha
                         Swal.fire('Lỗi', 'Không thể cập nhật tên nhóm', 'error');
                     }
                 });
+            }
+        });
+    }
+
+    toggleAllowMemberChat(event: Event) {
+        const checkbox = event.target as HTMLInputElement;
+        const newValue = checkbox.checked;
+        const conversationId = this.conversationInfor?.conversation_id || this.activeConversationService.activeConversationId();
+
+        if (!conversationId) return;
+
+        if (!this.isOwner) {
+            Swal.fire('Lỗi', 'Chỉ Trưởng nhóm mới có quyền thay đổi cài đặt này.', 'error');
+            checkbox.checked = !newValue;
+            return;
+        }
+
+        Swal.fire({
+            title: 'Đang cập nhật...',
+            didOpen: () => {
+                Swal.showLoading();
+            },
+            allowOutsideClick: false
+        });
+
+        this.conversationService.putConversation(conversationId, { allow_member_chat: newValue }).subscribe({
+            next: () => {
+                Swal.fire('Thành công', 'Đã cập nhật cài đặt nhóm', 'success');
+                if (this.conversationInfor) {
+                    this.conversationInfor.allow_member_chat = newValue;
+                }
+
+                // Emit socket to notify other members
+                this.socketService.emit('updateConversationInfo', {
+                    conversation_id: conversationId,
+                    allow_member_chat: newValue
+                });
+
+                // Create system message
+                const messageContent = `@[${this.currentUserId}] đã ${newValue ? 'mở' : 'tắt'} tính năng cho phép thành viên nhắn tin trong nhóm.`;
+                this.messagesService.postMessage(
+                    conversationId,
+                    this.currentUserId,
+                    messageContent,
+                    undefined,
+                    'system'
+                ).subscribe({
+                    next: (msgRes: any) => {
+                        const savedMsg = msgRes.metadata?.newMessage;
+                        if (savedMsg) {
+                            this.messageStoreService.addMessage(conversationId, savedMsg);
+                            this.socketService.emit('sendMessage', savedMsg);
+                            this.socketService.emit('updateConversation', savedMsg);
+                        }
+                    }
+                });
+
+                this.cdr.detectChanges();
+            },
+            error: (err) => {
+                console.error('Failed to update allow_member_chat:', err);
+                Swal.fire('Lỗi', 'Không thể cập nhật cài đặt nhóm', 'error');
+                checkbox.checked = !newValue; // revert checkbox
             }
         });
     }
