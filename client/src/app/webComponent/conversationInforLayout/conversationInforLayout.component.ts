@@ -225,7 +225,26 @@ export class ConversationInfoLayoutComponent implements OnInit, OnDestroy, OnCha
     }
 
     get participants(): any[] {
-        return (this.conversationInfor?.participants || []).filter((p: any) => !p.left_at);
+        return (this.conversationInfor?.participants || [])
+            .filter((p: any) => !p.left_at)
+            .sort((a: any, b: any) => {
+                const getFirstName = (name: string) => {
+                    if (!name) return '';
+                    const parts = name.trim().split(/\s+/);
+                    return parts[parts.length - 1].toLowerCase();
+                };
+                
+                const fullNameA = a.nick_name || a.full_name || '';
+                const fullNameB = b.nick_name || b.full_name || '';
+                
+                const firstNameA = getFirstName(fullNameA);
+                const firstNameB = getFirstName(fullNameB);
+                
+                const compare = firstNameA.localeCompare(firstNameB);
+                if (compare !== 0) return compare;
+                
+                return fullNameA.toLowerCase().localeCompare(fullNameB.toLowerCase());
+            });
     }
 
     get isCurrentUserActiveMember(): boolean {
@@ -1221,12 +1240,37 @@ export class ConversationInfoLayoutComponent implements OnInit, OnDestroy, OnCha
                     }
 
                     const newParticipants = results
-                        .filter(res => res?.metadata?.participant)
-                        .map(res => res.metadata.participant);
+                        .filter(res => res?.metadata?.participant || res?.metadata?.newParticipant)
+                        .map(res => {
+                            const p = res.metadata.participant || res.metadata.newParticipant;
+                            const friendInfo = this.friends.find(f => String(f.friend_id) === String(p.user_id));
+                            if (friendInfo) {
+                                p.full_name = friendInfo.full_name;
+                                p.avatar_url = friendInfo.avatar_url;
+                                p.email = friendInfo.email;
+                                p.nick_name = friendInfo.nick_name;
+                            } else {
+                                p.full_name = 'Thành viên mới';
+                            }
+                            // Map role to owner property to match homeConversationsService behavior
+                            if (p.role) {
+                                p.owner = p.role;
+                            }
+                            return p;
+                        });
 
                     if (newParticipants.length > 0) {
                         if (this.conversationInfor && this.conversationInfor.participants) {
-                            this.conversationInfor.participants = [...this.conversationInfor.participants, ...newParticipants];
+                            let localParticipants = [...this.conversationInfor.participants];
+                            newParticipants.forEach(newP => {
+                                const idx = localParticipants.findIndex((p:any) => String(p.user_id) === String(newP.user_id));
+                                if (idx !== -1) {
+                                    localParticipants[idx] = { ...localParticipants[idx], ...newP, left_at: null };
+                                } else {
+                                    localParticipants.push(newP);
+                                }
+                            });
+                            this.conversationInfor.participants = localParticipants;
                         }
                         // Cập nhật vào store tổng
                         this.activeConversationService.updateConversationParticipants(convID, newParticipants);
@@ -1261,6 +1305,14 @@ export class ConversationInfoLayoutComponent implements OnInit, OnDestroy, OnCha
                         newParticipants: newParticipants,
                         systemMessages: savedMessages // Gửi kèm các tin nhắn hệ thống thực tế (đã trích xuất)
                     };
+
+                    savedMessages.forEach(savedMsg => {
+                        if (savedMsg) {
+                            this.messageStoreService.addMessage(convID, savedMsg);
+                            this.socketService.emit('sendMessage', savedMsg);
+                            this.socketService.emit('updateConversation', savedMsg);
+                        }
+                    });
 
                     this.socketService.emit('addMember', addMemberPayload);
                     // Tự bắn nội bộ cho chính mình (người thêm) để hiện sys message ngay lập tức

@@ -593,14 +593,21 @@ export class ActiveConversationService implements OnDestroy {
             if (!cur?.homeConversationData?.joinedConversations) return cur;
             const updated = cur.homeConversationData.joinedConversations.map((conv: any) => {
                 if (String(conv.conversation_id) === String(conversationId)) {
-                    // Tránh duplicate nếu socket đã báo trước đó
-                    const participants = conv.participants || [];
-                    const existingIds = new Set(participants.map((p: any) => String(p.user_id)));
-                    const filteredNew = newParticipants.filter(p => !existingIds.has(String(p.user_id)));
+                    let participants = [...(conv.participants || [])];
+                    
+                    newParticipants.forEach(newP => {
+                        const existingIndex = participants.findIndex((p: any) => String(p.user_id) === String(newP.user_id));
+                        if (existingIndex !== -1) {
+                            // Cập nhật lại participant cũ (xóa left_at, cập nhật role, vv)
+                            participants[existingIndex] = { ...participants[existingIndex], ...newP, left_at: null };
+                        } else {
+                            participants.push(newP);
+                        }
+                    });
                     
                     return { 
                         ...conv, 
-                        participants: [...participants, ...filteredNew] 
+                        participants: participants 
                     };
                 }
                 return conv;

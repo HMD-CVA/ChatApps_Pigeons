@@ -282,8 +282,17 @@ io.on('connection', (socket) => {
         // Broadcast tới tất cả trong phòng để cập nhật danh sách thành viên cho những người đang ở sẵn trong phòng
         io.to(data.conversation_id).emit('addMember', data);
 
-        // Gửi tới riêng những người được thêm vào (vì họ chưa join room conversation_id nên lệnh io.to phía trên sẽ không tới họ)
-        if (data.added_user_ids && Array.isArray(data.added_user_ids)) {
+        // Gửi tới tất cả các thành viên (kể cả cũ và mới) để đảm bảo không ai bị sót nếu chưa join room
+        if (data.all_participant_ids && Array.isArray(data.all_participant_ids)) {
+            data.all_participant_ids.forEach(userId => {
+                const userSockets = onlineUsers.get(String(userId));
+                if (userSockets) {
+                    userSockets.forEach(socketId => {
+                        io.to(socketId).emit('addMember', data);
+                    });
+                }
+            });
+        } else if (data.added_user_ids && Array.isArray(data.added_user_ids)) {
             data.added_user_ids.forEach(userId => {
                 const userSockets = onlineUsers.get(String(userId));
                 if (userSockets) {
