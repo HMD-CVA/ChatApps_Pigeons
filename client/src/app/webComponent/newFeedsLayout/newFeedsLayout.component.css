@@ -1373,6 +1373,25 @@
     filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.25));
 }
 
+.reaction-icon-fallback,
+.reaction-modal-icon {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    line-height: 1;
+    pointer-events: none;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.25));
+}
+
+.reaction-modal-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 1.5rem;
+}
+
 .reaction-label {
     position: absolute;
     bottom: calc(100% + 14px);

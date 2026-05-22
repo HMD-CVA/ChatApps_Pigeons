@@ -33,6 +33,9 @@ export class ActiveConversationService implements OnDestroy {
     activeConversationId = signal<string | null>(null);
     showConversationInfor = signal(false);
 
+    // Track các conversations đã bị user xóa lịch sử (tránh hiển thị lại qua socket)
+    private clearedConversationIds = new Set<string>();
+
     toggleConversationInfor(force?: boolean) {
         if (force !== undefined) {
             this.showConversationInfor.set(force);
@@ -62,6 +65,10 @@ export class ActiveConversationService implements OnDestroy {
 
     joinedConversations = computed(
         () => this.conversations()?.homeConversationData?.joinedConversations || [],
+    );
+
+    visibleJoinedConversations = computed(
+        () => this.joinedConversations().filter((conv: any) => !conv.is_hidden_from_sidebar),
     );
 
     currentUserInfo = computed(() => this.conversations()?.homeConversationData?.userInfo);
@@ -739,6 +746,10 @@ export class ActiveConversationService implements OnDestroy {
                     key_version: data.key_version,
                 };
 
+                if (conv.is_hidden_from_sidebar) {
+                    conv.is_hidden_from_sidebar = false;
+                }
+
                 const isMuted = me?.is_muted || false;
 
                 if (!isMuted) {
@@ -763,6 +774,37 @@ export class ActiveConversationService implements OnDestroy {
                         joinedConversations: convList,
                     },
                 };
+            } else {
+                const userId = this.authService.getUserId();
+                if (userId) {
+                    this.conversationService.getConversations(userId).subscribe({
+                        next: async (response) => {
+                            const metadata = response.metadata || {};
+                            let joined = metadata.homeConversationData?.joinedConversations || [];
+                            joined = await this.decryptSidebarLastMessages(joined);
+
+                            const sorted = [...joined].sort((a: any, b: any) => {
+                                if (a.is_pinned && !b.is_pinned) return -1;
+                                if (!a.is_pinned && b.is_pinned) return 1;
+                                const timeA = new Date(
+                                    a.lastMessage?.created_at || a.updated_at || 0,
+                                ).getTime();
+                                const timeB = new Date(
+                                    b.lastMessage?.created_at || b.updated_at || 0,
+                                ).getTime();
+                                return timeB - timeA;
+                            });
+
+                            this.conversations.set({
+                                ...metadata,
+                                homeConversationData: {
+                                    ...metadata.homeConversationData,
+                                    joinedConversations: sorted,
+                                },
+                            });
+                        },
+                    });
+                }
             }
             return cur;
         });
@@ -844,6 +886,30 @@ export class ActiveConversationService implements OnDestroy {
                 };
             }
             return current;
+        });
+    }
+
+    removeConversationFromList(conversationId: string) {
+        // Đánh dấu conversation này đã bị xóa để ngăn hiển thị trong sidebar,
+        // nhưng vẫn giữ trong state để còn resolve conv_id khi có tin nhắn mới.
+        this.clearedConversationIds.add(String(conversationId));
+
+        this.conversations.update((current: any) => {
+            if (!current?.homeConversationData?.joinedConversations) return current;
+            const joined = current.homeConversationData.joinedConversations.map((c: any) => {
+                if (String(c.conversation_id) !== String(conversationId)) return c;
+                return {
+                    ...c,
+                    is_hidden_from_sidebar: true,
+                };
+            });
+            return {
+                ...current,
+                homeConversationData: {
+                    ...current.homeConversationData,
+                    joinedConversations: joined
+                }
+            };
         });
     }
 }

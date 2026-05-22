@@ -15,7 +15,7 @@ export class FeedsAdminLayoutComponent implements OnInit, OnDestroy {
 	feedStore = inject(FeedStoreService);
 	searchTerm = signal('');
 	typeFilter = signal<'all' | 'text' | 'link' | 'share' | 'media'>('all');
-	privacyFilter = signal<'all' | 'public' | 'friends' | 'only_me' | 'custom'>('all');
+	privacyFilter = signal<'all' | 'public' | 'only_me' | 'custom'>('all');
 	statusFilter = signal<'all' | 'pending' | 'approved' | 'rejected'>('all');
 
 	loading = computed(() => this.feedStore.loading());

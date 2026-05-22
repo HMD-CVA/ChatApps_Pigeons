@@ -613,7 +613,7 @@ export class ConversationLayoutComponent implements OnInit, OnDestroy {
     }
 
     hasConversations(): boolean {
-        return (this.conversations()?.homeConversationData?.joinedConversations?.length || 0) > 0;
+        return (this.convStore.visibleJoinedConversations().length || 0) > 0;
     }
 
     // ── Helpers ────────────────────────────────────────────

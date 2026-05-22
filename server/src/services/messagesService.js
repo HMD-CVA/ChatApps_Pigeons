@@ -50,6 +50,7 @@ class MessagesService {
         offset = 0,
         userId = null,
         leftAt = null,
+        historyClearedAt = null
     ) {
         let whereCondition = { conversation_id: conversationId };
 
@@ -68,7 +69,10 @@ class MessagesService {
         }
 
         if (leftAt) {
-            whereCondition.created_at = { [Op.lte]: leftAt };
+            whereCondition.created_at = { ...whereCondition.created_at, [Op.lte]: leftAt };
+        }
+        if (historyClearedAt) {
+            whereCondition.created_at = { ...whereCondition.created_at, [Op.gt]: historyClearedAt };
         }
 
         const messages = await messagesModel.findAll({

@@ -412,20 +412,7 @@
                                                                                             $event
                                                                                         )
                                                                                     ">
-                                            @if (
-                                            reactionLottieUrls[
-                                            emoji
-                                            ]
-                                            ) {
-                                            <lottie-player class="lottie-emoji" [src]="
-                                                                                                reactionLottieUrls[
-                                                                                                    emoji
-                                                                                                ]
-                                                                                            " background="transparent"
-                                                speed="1" direction="1" mode="normal" loop autoplay></lottie-player>
-                                            } @else {
-                                            {{ emoji }}
-                                            }
+                                            <span class="reaction-emoji-text">{{ emoji }}</span>
                                         </button>
                                         }
                                     </div>

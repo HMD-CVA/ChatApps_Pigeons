@@ -15,7 +15,7 @@ export class IntroLayoutComponent {
   private convStore = inject(ActiveConversationService);
   version = packageInfo.version;
 
-  hasConversations = computed(() => this.convStore.joinedConversations().length > 0);
+  hasConversations = computed(() => this.convStore.visibleJoinedConversations().length > 0);
   @Output() startNewConversation = new EventEmitter<void>();
 
   handleStart() {

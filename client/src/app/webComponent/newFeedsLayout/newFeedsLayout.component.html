@@ -432,9 +432,7 @@
                                             <div [class]="'reaction-item ' + reaction.id"
                                                 [style.--reaction-color]="reaction.color"
                                                 (click)="handleReaction(reaction, post)">
-                                                <lottie-player [src]="reaction.lottieUrl" background="transparent"
-                                                    speed="1" class="reaction-lottie" loop autoplay>
-                                                </lottie-player>
+                                                <span class="reaction-icon-fallback">{{ reaction.icon }}</span>
                                                 <span class="reaction-label">{{ reaction.label }}</span>
                                             </div>
                                             }
@@ -1026,9 +1024,7 @@
                         <img [src]="reaction.user_infor?.avatar_url" [alt]="reaction.user_infor?.full_name"
                             class="avatar-s" referrerPolicy="no-referrer">
                         <span class="user-fullname">{{ reaction.user_infor?.full_name }}</span>
-                        <lottie-player [src]="getReactionLottieUrl(reaction.reaction_type)" background="transparent"
-                            speed="1" class="reaction-modal-lottie" loop autoplay>
-                        </lottie-player>
+                        <span class="reaction-modal-icon">{{ getReactionIcon(reaction.reaction_type) }}</span>
                     </div>
                 </div>
                 }

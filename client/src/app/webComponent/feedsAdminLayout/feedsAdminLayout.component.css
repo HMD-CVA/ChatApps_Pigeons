@@ -168,7 +168,17 @@
 
 .toolbar-select {
 	padding: 0.85rem 1rem;
-	background: rgba(255, 255, 255, 0.04);
+	background-color: rgba(255, 255, 255, 0.04);
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	color-scheme: dark;
+}
+
+.toolbar-select option,
+.edit-modal select option {
+	background-color: #0b1725;
+	color: #eef5ff;
 }
 
 .feeds-state-card {
@@ -659,7 +669,11 @@
 	padding: 0.9rem 1rem;
 	border-radius: 14px;
 	border: 1px solid rgba(120, 170, 255, 0.16);
-	background: rgba(255, 255, 255, 0.04);
+	background-color: rgba(255, 255, 255, 0.04);
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	color-scheme: dark;
 }
 
 .modal-close {

@@ -86,6 +86,20 @@ class HomeConversationController {
             next(error);
         }
     }
+
+    async clearHistory(req, res, next) {
+        try {
+            const conversationId = req.params.convID;
+            const userId = req.user.id;
+            const result = await homeConversationsService.clearConversationHistory(conversationId, userId);
+            return new SuccessResponse({
+                message: 'Clear conversation history successfully',
+                metadata: result,
+            }).send(res);
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 module.exports = new HomeConversationController();

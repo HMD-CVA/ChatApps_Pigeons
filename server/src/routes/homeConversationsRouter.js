@@ -9,6 +9,7 @@ router.put('/:convID', homeConversationController.putHomeConversation);
 router.post('/group', homeConversationController.createGroup);
 router.post('/', homeConversationController.createConversation);
 router.get('/name/:convID', homeConversationController.getConversationNameById);
+router.delete('/:convID/clear', homeConversationController.clearHistory);
 router.delete('/:convID', homeConversationController.deleteConversation);
 
 module.exports = router;

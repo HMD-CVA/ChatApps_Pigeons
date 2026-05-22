@@ -5,7 +5,9 @@ const messageReactionService = require('./message_reactionsService');
 const usersService = require('./usersService');
 const linkpreviewService = require('./linkpreviewService');
 const participantsService = require('./participantsService.js');
+const participantsModel = require('../models/participantsModel');
 const { BadRequestError, ForbiddenError, E2EEErrorCode } = require('../core/errorResponse.js');
+const { Op } = require('sequelize');
 const openAiService = require('../services/openAiService.js');
 const e2eeService = require('./E2EEService');
 const oneSignalService = require('./oneSignalService');
@@ -14,13 +16,27 @@ class HomeMessagesService {
     async getMessagesByConversation(conversationId, limit = 100, offset = 0, userId = null) {
         let leftAt = null;
         let lastReadMessageId = null;
+        let historyClearedAt = null;
         if (userId) {
             const currentParticipant = await participantsService.getParticipant({
                 conversation_id: conversationId,
                 user_id: userId,
             });
+            // Nếu user đã xóa lịch sử trò chuyện này (is_active = false), không cho load tin nhắn
+            if (currentParticipant && currentParticipant.is_active === false) {
+                return {
+                    id: conversationId,
+                    messages: [],
+                    pinnedMessages: [],
+                    hasMore: false,
+                    is_not_found: true,
+                    conversation_type: 'direct',
+                    last_read_message_id: null,
+                };
+            }
             leftAt = currentParticipant?.left_at || null;
             lastReadMessageId = currentParticipant?.last_read_message_id || null;
+            historyClearedAt = currentParticipant?.history_cleared_at || null;
         }
 
         // 1. Song song hóa queries ban đầu
@@ -32,6 +48,7 @@ class HomeMessagesService {
                 offset,
                 userId,
                 leftAt,
+                historyClearedAt
             ),
             pinnedmessagesService.getPinnedMessagesByConversationId(conversationId),
         ]);
@@ -316,6 +333,19 @@ class HomeMessagesService {
             })(),
             parentMessage ? usersService.getUserById(parentMessage.sender_id) : Promise.resolve(null),
         ]);
+
+        // 3. Reset is_active = true cho các participants đã xóa lịch sử (ngoại trừ người gửi)
+        //    Điều này khiến conversation hiện lại trên sidebar của họ ngay khi nhận socket
+        await participantsModel.update(
+            { is_active: true },
+            {
+                where: {
+                    conversation_id: conversationId,
+                    user_id: { [Op.ne]: senderId },
+                    is_active: false,
+                }
+            }
+        );
 
         const parent_message_info = parentMessage
             ? {

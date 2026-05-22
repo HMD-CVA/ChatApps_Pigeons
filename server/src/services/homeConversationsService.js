@@ -10,8 +10,15 @@ class HomeConversationService {
     // Lấy danh sách conversations của user để hiển thị sidebar
     async getAllUserMessagesInJoinedConversations(userId) {
         // 1. Lấy tất cả participant record của user (bao gồm cả các cuộc hội thoại đã rời)
-        const userParticipants = await participantsService.getAllParticipants({ user_id: userId });
-        const conversationIds = userParticipants.map((p) => p.conversation_id);
+        // Giữ lại cả conversation bị ẩn để client vẫn có thể lookup conv_id,
+        // nhưng đánh dấu riêng để UI không render cho tới khi có tin nhắn mới.
+        const allUserParticipants = await participantsService.getAllParticipants({ user_id: userId });
+        const hiddenConversationIds = new Set(
+            allUserParticipants
+                .filter((p) => p.is_active === false)
+                .map((p) => String(p.conversation_id)),
+        );
+        const conversationIds = [...new Set(allUserParticipants.map((p) => p.conversation_id))];
         if (conversationIds.length === 0) return {
             userInfo: await usersService.getUserById(userId),
             joinedConversations: []
@@ -43,7 +50,7 @@ class HomeConversationService {
         const conversationsMap = new Map(conversations.map((c) => [c.id, c]));
 
         const currentUserParticipantMap = new Map(
-            userParticipants.map((p) => [String(p.conversation_id), p]),
+            allUserParticipants.map((p) => [String(p.conversation_id), p]),
         );
 
         // Chuẩn bị thông tin unread count
@@ -188,6 +195,7 @@ class HomeConversationService {
         // 5. Tổng hợp sidebar — conversations đã filter theo conversationIds của user nên không cần .some()
         const joinedConversations = conversations.map((conv) => {
             const convParticipants = participantsMap.get(conv.id) || [];
+            const currentParticipant = currentUserParticipantMap.get(String(conv.id));
 
             let title = conv.name;
             if (!title) {
@@ -195,7 +203,6 @@ class HomeConversationService {
                 title = other ? other.full_name : 'Cuộc trò chuyện';
             }
 
-            const currentParticipant = currentUserParticipantMap.get(String(conv.id));
             const hasLeft = !!currentParticipant?.left_at;
             const sidebarLastMessage = hasLeft
                 ? leftConversationLastMessageMap.get(String(conv.id)) || null
@@ -212,7 +219,8 @@ class HomeConversationService {
                 unread_count: hasLeft ? 0 : unreadCountsMap[conv.id] || 0,
                 is_pinned: isPinnedMap.get(conv.id) || false,
                 allow_history_view: conv.allow_history_view,
-                allow_member_chat: conv.allow_member_chat
+                allow_member_chat: conv.allow_member_chat,
+                is_hidden_from_sidebar: hiddenConversationIds.has(String(conv.id)),
             };
         });
 
@@ -305,6 +313,21 @@ class HomeConversationService {
             participants: participants.map(enrich),
             you: enrich(you)
         };
+    }
+
+    async clearConversationHistory(conversationId, userId) {
+        if (!conversationId || !userId) throw new BadRequestError('params invalid');
+
+        const participantsModel = require('../models/participantsModel');
+        await participantsModel.update(
+            {
+                history_cleared_at: new Date(),
+                is_active: false
+            },
+            { where: { conversation_id: conversationId, user_id: userId } }
+        );
+
+        return { success: true };
     }
 }
 
